@@ -1,4 +1,4 @@
-import Link from "next/link";
+ï»¿import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export default function Home() {
@@ -81,7 +81,7 @@ export default function Home() {
                       </svg>
                    </div>
                    <h3 className="text-2xl font-bold text-slate-800">State-of-the-Art Exam Engine</h3>
-                   <p className="text-slate-500 font-medium">150 Questions • 150 Minutes • Zero Distractions</p>
+                   <p className="text-slate-500 font-medium">150 Questions â€¢ 150 Minutes â€¢ Zero Distractions</p>
                 </div>
               </div>
             </div>
@@ -179,7 +179,7 @@ export default function Home() {
             </div>
             <span className="font-bold text-slate-900">WB TET Pro</span>
           </div>
-          <p className="text-sm text-slate-500">© 2026 WB TET Mock Platform. All rights reserved.</p>
+          <p className="text-sm text-slate-500">Â© 2026 WB TET Mock Platform. All rights reserved.</p>
         </div>
       </footer>
     </div>
