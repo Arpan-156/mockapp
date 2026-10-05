@@ -1,95 +1,118 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
 
-export default function ImportQuestionsPage() {
-  const [query, setQuery] = useState("WB TET Primary CDP previous year");
+export default function GeneratorStudioPage() {
+  const [testName, setTestName] = useState("WB TET Live Generation Set 01");
   const [loading, setLoading] = useState(false);
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState("");
+  const [status, setStatus] = useState<"idle" | "generating" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    fetch("/api/admin/subjects").then(res => res.json()).then(data => {
-      setSubjects(data.subjects);
-      if (data.subjects.length > 0) setSelectedSubject(data.subjects[0].id);
-    });
-  }, []);
-
-  const handleFetch = async () => {
+  const handleGenerate = async () => {
     setLoading(true);
-    setQuestions([]);
+    setStatus("generating");
     try {
-      const res = await fetch("/api/admin/fetch-questions", {
+      const res = await fetch("/api/admin/generate-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, subjectId: selectedSubject }),
+        body: JSON.stringify({ testName }),
       });
       const data = await res.json();
-      if (data.questions) {
-        setQuestions(data.questions);
+      if (data.success) {
+        setStatus("success");
+        setMessage(data.message);
       } else {
-        alert(data.error || "Failed to fetch");
+        setStatus("error");
+        setMessage(data.error || "Failed to generate test");
       }
     } catch (e) {
-      alert("Error fetching questions");
+      setStatus("error");
+      setMessage("Network error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Real-time Question Discovery</h1>
+    <div className="max-w-4xl mx-auto space-y-8 font-sans">
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">Live Test Generator</h1>
+        <p className="text-slate-500 text-lg">Use real-time web scraping to build a unique 150-question mock test instantly.</p>
+      </div>
       
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-900">Search Query</label>
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl shadow-blue-900/5">
+        <div className="p-8 space-y-8">
+          
+          <div className="space-y-3">
+            <label className="block text-sm font-bold text-slate-700">Test Set Name</label>
             <Input 
-              value={query} 
-              onChange={e => setQuery(e.target.value)} 
-              placeholder="e.g. WB TET EVS questions" 
-              className="text-gray-900 bg-white"
+              value={testName} 
+              onChange={e => setTestName(e.target.value)} 
+              className="text-lg py-6 font-semibold bg-slate-50 border-slate-200 text-slate-900 focus:bg-white transition-colors"
             />
+            <p className="text-sm text-slate-500 font-medium">This name will be visible to students on the dashboard.</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-900">Target Subject</label>
-            <select 
-              value={selectedSubject} 
-              onChange={e => setSelectedSubject(e.target.value)}
-              className="w-full h-10 rounded-md border border-gray-300 px-3 bg-white text-gray-900"
-            >
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <Button onClick={handleFetch} disabled={loading || !selectedSubject}>
-            {loading ? "Searching Google..." : "Search Web Sources"}
-          </Button>
-        </CardContent>
-      </Card>
 
-      {questions.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">Discovered Drafts (Requires Review)</h2>
-          {questions.map((q, idx) => (
-            <Card key={idx}>
-              <CardHeader>
-                <CardTitle className="text-lg">Draft #{idx + 1} - Source: {q.source}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-gray-800">
-                <p><strong>URL:</strong> <a href={q.sourceUrl} target="_blank" className="text-blue-600 underline">{q.sourceUrl}</a></p>
-                <p><strong>Extracted Snippet:</strong> {q.questionText}</p>
-                <p><em>In a full production implementation with a Gemini LLM, this snippet would be parsed precisely into the 4 options and correct answer automatically. For now, it is stored as a draft requiring manual admin edit.</em></p>
-                <Button className="mt-4">Approve & Save to Database</Button>
-              </CardContent>
-            </Card>
-          ))}
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-6">
+            <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              Generation Process
+            </h3>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-3 text-sm text-blue-800 font-medium">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">1</div>
+                Scrapes Google Search for all 5 WB TET Subjects
+              </li>
+              <li className="flex items-center gap-3 text-sm text-blue-800 font-medium">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">2</div>
+                Extracts relevant MCQs, options, and explanations
+              </li>
+              <li className="flex items-center gap-3 text-sm text-blue-800 font-medium">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">3</div>
+                Compiles exactly 30 questions per subject (150 total)
+              </li>
+              <li className="flex items-center gap-3 text-sm text-blue-800 font-medium">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">4</div>
+                Publishes instantly to the Student Dashboard
+              </li>
+            </ul>
+          </div>
         </div>
-      )}
+
+        <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex-1">
+            {status === "generating" && (
+              <div className="flex items-center gap-3 text-blue-600 font-bold">
+                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                Mining web sources and compiling questions...
+              </div>
+            )}
+            {status === "success" && (
+              <div className="flex items-center gap-2 text-emerald-600 font-bold">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                {message}
+              </div>
+            )}
+            {status === "error" && (
+              <div className="flex items-center gap-2 text-red-600 font-bold">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {message}
+              </div>
+            )}
+          </div>
+          
+          <Button 
+            onClick={handleGenerate} 
+            disabled={loading || !testName}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 h-12 shadow-md shadow-blue-200"
+          >
+            {loading ? "Generating..." : "Generate 150 Qs"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
+"

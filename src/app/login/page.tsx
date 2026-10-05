@@ -1,84 +1,53 @@
-"use client";
-
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
+import { LoginForm } from "@/components/auth/LoginForm";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (res?.error) {
-      setError("Invalid credentials. Please try again.");
-    } else {
-      router.push("/dashboard");
-      router.refresh();
-    }
-  };
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Login to WB TET Mock</CardTitle>
-          <p className="text-center text-sm text-gray-500">
-            Enter your email and password to access your account
-          </p>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && <div className="text-sm font-medium text-red-500">{error}</div>}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="student@wbtet.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center mb-6">
+          <Link href="/">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-white font-extrabold text-2xl">W</span>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+          </Link>
+        </div>
+        <h2 className="mt-2 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
+          Welcome back
+        </h2>
+        <p className="mt-2 text-center text-sm text-slate-600">
+          Or{" "}
+          <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+            create a new account
+          </Link>
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-200">
+          <LoginForm />
+          
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-slate-500 font-medium">Demo Credentials</span>
+              </div>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-            <div className="text-center text-sm text-gray-500">
-              Don't have an account?{" "}
-              <a href="/register" className="text-blue-600 hover:underline">
-                Register here
-              </a>
+            <div className="mt-6 bg-slate-50 p-4 rounded-xl text-xs text-slate-600 border border-slate-100 space-y-2">
+              <div className="flex justify-between">
+                <span className="font-medium text-slate-900">Student:</span> student@wbtet.com / *123
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-slate-900">Admin:</span> admin@wbtet.com / *123
+              </div>
             </div>
-          </CardFooter>
-        </form>
-      </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
