@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("student") // 'student' or 'admin'
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  mockTests     MockTest[] @relation("CreatedTests")
+  attempts      Attempt[]
+}
+
+model Subject {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  orderIndex  Int       @default(0)
+  topics      Topic[]
+  questions   Question[]
+}
+
+model Topic {
+  id          String    @id @default(uuid())
+  name        String
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions   Question[]
+}
+
+model Question {
+  id              String   @id @default(uuid())
+  subjectId       String
+  subject         Subject  @relation(fields: [subjectId], references: [id])
+  topicId         String?
+  topic           Topic?   @relation(fields: [topicId], references: [id])
+  
+  questionText    String
+  optionA         String
+  optionB         String
+  optionC         String
+  optionD         String
+  correctOption   String   // 'A', 'B', 'C', 'D'
+  explanation     String?
+  difficulty      String   @default("medium") // 'easy', 'medium', 'hard'
+  source          String?
+  sourceUrl       String?
+  examYear        Int?
+  status          String   @default("draft") // 'draft', 'pending_review', 'approved', 'published', 'archived'
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  testQuestions   TestQuestion[]
+  attemptAnswers  AttemptAnswer[]
+}
+
+model MockTest {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  durationMinutes Int      @default(150)
+  totalMarks      Int      @default(150)
+  passingMarks    Int      @default(90)
+  status          String   @default("draft") // 'draft', 'published', 'archived'
+  isRandomized    Boolean  @default(false)
+  
+  createdById     String
+  createdBy       User     @relation("CreatedTests", fields: [createdById], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  testQuestions   TestQuestion[]
+  attempts        Attempt[]
+}
+
+model TestQuestion {
+  mockTestId String
+  mockTest   MockTest @relation(fields: [mockTestId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  orderIndex Int
+
+  @@id([mockTestId, questionId])
+}
+
+model Attempt {
+  id                 String   @id @default(uuid())
+  studentId          String
+  student            User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  testId             String
+  test               MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  
+  startedAt          DateTime @default(now())
+  expiresAt          DateTime
+  submittedAt        DateTime?
+  status             String   @default("in_progress") // 'in_progress', 'submitted', 'abandoned'
+  
+  score              Int?
+  correctCount       Int      @default(0)
+  incorrectCount     Int      @default(0)
+  unansweredCount    Int      @default(0)
+  timeTakenSeconds   Int?
+  
+  answers            AttemptAnswer[]
+}
+
+model AttemptAnswer {
+  id                 String   @id @default(uuid())
+  attemptId          String
+  attempt            Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId         String
+  question           Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  selectedOption     String?
+  isCorrect          Boolean?
+  isMarkedReview     Boolean  @default(false)
+  timeSpentSeconds   Int      @default(0)
+  answeredAt         DateTime?
+}
