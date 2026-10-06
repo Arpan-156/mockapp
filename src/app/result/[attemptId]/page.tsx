@@ -169,13 +169,13 @@ export default async function ResultPage({ params }: { params: Promise<{ attempt
                     <div className="p-4 rounded border bg-gray-50">
                       <div className="text-sm font-bold text-gray-500 mb-1">Your Answer:</div>
                       <div className={`font-medium ${!ans.selectedOption ? 'text-gray-500' : ans.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                        {ans.selectedOption ? `${ans.selectedOption}. ${ans.question[`option${ans.selectedOption}` as keyof typeof ans.question]}` : 'None'}
+                        {ans.selectedOption ? `${ans.selectedOption}. ${ans.question[`option${ans.selectedOption}` as keyof typeof ans.question] as string}` : 'None'}
                       </div>
                     </div>
                     <div className="p-4 rounded border bg-green-50 border-green-100">
                       <div className="text-sm font-bold text-green-800 mb-1">Correct Answer:</div>
                       <div className="font-medium text-green-900">
-                        {ans.question.correctOption}. {ans.question[`option${ans.question.correctOption}` as keyof typeof ans.question]}
+                        {ans.question.correctOption}. {ans.question[`option${ans.question.correctOption}` as keyof typeof ans.question] as string}
                       </div>
                     </div>
                   </div>

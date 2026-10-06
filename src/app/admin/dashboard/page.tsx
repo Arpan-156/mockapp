@@ -1,6 +1,8 @@
-﻿import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import StudentManager from "./StudentManager";
+import TestManager from "./TestManager";
 
 export default async function AdminDashboard() {
   const studentCount = await prisma.user.count({ where: { role: "student" } });
@@ -8,8 +10,47 @@ export default async function AdminDashboard() {
   const testCount = await prisma.mockTest.count();
   const attemptCount = await prisma.attempt.count();
 
+  // Fetch all students for the manager
+  const students = await prisma.user.findMany({
+    where: { role: "student" },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      isLocked: true,
+      forceLogoutAt: true,
+      attempts: {
+        orderBy: { startedAt: "desc" },
+        take: 1,
+        select: { startedAt: true }
+      }
+    }
+  } as any);
+
+  // Format students to include lastActive
+  const formattedStudents = students.map((s: any) => {
+    let lastActiveStr = "Never";
+    if (s.attempts[0]?.startedAt) {
+      const d = new Date(s.attempts[0].startedAt);
+      lastActiveStr = d.toISOString().split('T')[0] + ' ' + d.toLocaleTimeString('en-US', { hour12: false });
+    }
+    return {
+      id: s.id,
+      email: s.email,
+      name: s.name,
+      isLocked: s.isLocked,
+      lastActive: lastActiveStr,
+    };
+  });
+
+  // Fetch all live mock tests
+  const liveTests = await prisma.mockTest.findMany({
+    where: { status: "published" },
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto font-sans">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">Platform Overview</h1>
         <p className="text-slate-500">Monitor system statistics and generate new test sets in real-time.</p>
@@ -45,7 +86,7 @@ export default async function AdminDashboard() {
           </div>
           <h2 className="text-2xl font-bold mb-2 text-slate-900">Live Test Generator</h2>
           <p className="text-slate-600 mb-6 leading-relaxed">
-            Generate a full 150-question mock test instantly. The system will scrape Google Search in real-time to build a brand new, unique mock test with 30 questions per subject.
+            Generate a full 150-question mock test instantly. The system will scrape Web Search in real-time to build a brand new, unique mock test with 30 questions per subject.
           </p>
           <Link href="/admin/questions/import">
             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md font-semibold h-12 rounded-xl">
@@ -54,34 +95,19 @@ export default async function AdminDashboard() {
           </Link>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-          <h2 className="text-xl font-bold mb-4 text-slate-900">System Status</h2>
-          <div className="space-y-4">
-             <div className="flex items-center justify-between p-4 rounded-xl border border-emerald-100 bg-emerald-50/50">
-               <div className="flex items-center gap-3">
-                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                 <span className="font-semibold text-emerald-900">Database Connection</span>
-               </div>
-               <span className="text-emerald-700 font-medium text-sm">Online</span>
-             </div>
-             <div className="flex items-center justify-between p-4 rounded-xl border border-emerald-100 bg-emerald-50/50">
-               <div className="flex items-center gap-3">
-                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                 <span className="font-semibold text-emerald-900">Authentication Service</span>
-               </div>
-               <span className="text-emerald-700 font-medium text-sm">Online</span>
-             </div>
-             <div className="flex items-center justify-between p-4 rounded-xl border border-emerald-100 bg-emerald-50/50">
-               <div className="flex items-center gap-3">
-                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                 <span className="font-semibold text-emerald-900">Scraper Engine</span>
-               </div>
-               <span className="text-emerald-700 font-medium text-sm">Ready</span>
-             </div>
-          </div>
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+           <h2 className="text-xl font-bold mb-4 text-slate-900">Active Mock Tests</h2>
+           <p className="text-sm text-slate-500 mb-2">View and manage currently live mock tests.</p>
+           <TestManager initialTests={liveTests} />
+        </div>
+
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm md:col-span-2">
+           <h2 className="text-xl font-bold mb-4 text-slate-900">Student Access Management</h2>
+           <p className="text-sm text-slate-500 mb-6">View all registered students, lock their accounts, or force them to log out.</p>
+           
+           <StudentManager initialStudents={formattedStudents} />
         </div>
       </div>
     </div>
   );
 }
-

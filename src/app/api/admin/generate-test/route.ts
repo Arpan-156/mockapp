@@ -16,7 +16,7 @@ const generateOptions = (seed: string) => {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !session.user || session.user.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -92,9 +92,26 @@ export async function POST(req: Request) {
       }
     }
 
+    const createdQuestions = await prisma.question.findMany({
+      where: {
+        testQuestions: {
+          some: {
+            mockTestId: mockTest.id
+          }
+        }
+      },
+      include: {
+        subject: true
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
+    });
+
     return NextResponse.json({ 
       success: true, 
       testId: mockTest.id,
+      questions: createdQuestions,
       message: `Successfully generated a 150-question mock test!`
     });
 

@@ -8,18 +8,20 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          String    @default("student") // 'student' or 'admin'
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  role           String    @default("student")
+  isLocked       Boolean   @default(false)
+  forceLogoutAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  mockTests     MockTest[] @relation("CreatedTests")
-  attempts      Attempt[]
+  mockTests      MockTest[] @relation("CreatedTests")
+  attempts       Attempt[]
 }
 
 model Subject {
@@ -51,13 +53,13 @@ model Question {
   optionB         String
   optionC         String
   optionD         String
-  correctOption   String   // 'A', 'B', 'C', 'D'
+  correctOption   String
   explanation     String?
-  difficulty      String   @default("medium") // 'easy', 'medium', 'hard'
+  difficulty      String   @default("medium")
   source          String?
   sourceUrl       String?
   examYear        Int?
-  status          String   @default("draft") // 'draft', 'pending_review', 'approved', 'published', 'archived'
+  status          String   @default("draft")
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -73,7 +75,7 @@ model MockTest {
   durationMinutes Int      @default(150)
   totalMarks      Int      @default(150)
   passingMarks    Int      @default(90)
-  status          String   @default("draft") // 'draft', 'published', 'archived'
+  status          String   @default("draft")
   isRandomized    Boolean  @default(false)
   
   createdById     String
@@ -106,7 +108,7 @@ model Attempt {
   startedAt          DateTime @default(now())
   expiresAt          DateTime
   submittedAt        DateTime?
-  status             String   @default("in_progress") // 'in_progress', 'submitted', 'abandoned'
+  status             String   @default("in_progress")
   
   score              Int?
   correctCount       Int      @default(0)
@@ -130,3 +132,4 @@ model AttemptAnswer {
   timeSpentSeconds   Int      @default(0)
   answeredAt         DateTime?
 }
+

@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     let incorrectCount = 0;
     let unansweredCount = 0;
 
-    const answersToUpdate = [];
+    const answersToUpdate: { id: string; isCorrect: boolean }[] = [];
 
     for (const ans of attempt.answers) {
       if (!ans.selectedOption) {

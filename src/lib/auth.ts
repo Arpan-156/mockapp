@@ -24,6 +24,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // @ts-ignore
+        if (user.isLocked) {
+          throw new Error("Your account has been locked by the administrator.");
+        }
+
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
@@ -32,6 +37,12 @@ export const authOptions: NextAuthOptions = {
         if (!isPasswordValid) {
           throw new Error("Invalid credentials");
         }
+
+        // Single device login: invalidate all previous sessions by setting forceLogoutAt to now
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { forceLogoutAt: new Date() }
+        });
 
         return {
           id: user.id,
@@ -51,9 +62,32 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, isLocked: true, forceLogoutAt: true }
+        } as any);
+
+        if (!dbUser) {
+          throw new Error("User not found");
+        }
+
+        if ((dbUser as any).isLocked) {
+          // Returning empty session to force client side logout
+          return { ...session, error: "LockedOut", user: undefined } as any;
+        }
+
+        if ((dbUser as any).forceLogoutAt && token.iat) {
+          const forceTime = Math.floor(new Date((dbUser as any).forceLogoutAt).getTime() / 1000);
+          if (forceTime > (token.iat as number)) {
+            return { ...session, error: "SessionExpired", user: undefined } as any;
+          }
+        }
+
+        if (session.user) {
+          session.user.role = (dbUser as any).role;
+          session.user.id = token.id as string;
+        }
       }
       return session;
     },
@@ -66,3 +100,4 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-key",
 };
+

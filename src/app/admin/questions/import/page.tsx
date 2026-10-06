@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -9,10 +9,12 @@ export default function GeneratorStudioPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "generating" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
   const handleGenerate = async () => {
     setLoading(true);
     setStatus("generating");
+    setGeneratedQuestions([]);
     try {
       const res = await fetch("/api/admin/generate-test", {
         method: "POST",
@@ -23,6 +25,9 @@ export default function GeneratorStudioPage() {
       if (data.success) {
         setStatus("success");
         setMessage(data.message);
+        if (data.questions) {
+          setGeneratedQuestions(data.questions);
+        }
       } else {
         setStatus("error");
         setMessage(data.error || "Failed to generate test");
@@ -112,6 +117,38 @@ export default function GeneratorStudioPage() {
           </Button>
         </div>
       </div>
+
+      {status === "success" && generatedQuestions.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-blue-900/5 p-8 mt-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Generated Questions Review</h2>
+          <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+            {generatedQuestions.map((q: any, i: number) => (
+              <div key={q.id} className="p-4 border border-slate-200 rounded-xl bg-slate-50">
+                <div className="flex items-start gap-3 mb-3">
+                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold shrink-0">
+                    Q{i + 1}
+                  </span>
+                  <div>
+                    <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs font-medium ml-2">
+                      {q.subject?.name || "Subject"}
+                    </span>
+                    <h3 className="font-semibold text-slate-900 mt-1">{q.questionText}</h3>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-10">
+                  <div className={`p-2 rounded text-sm ${q.correctOption === 'A' ? 'bg-emerald-100 text-emerald-800 font-medium border border-emerald-200' : 'bg-white border border-slate-200'}`}>A) {q.optionA}</div>
+                  <div className={`p-2 rounded text-sm ${q.correctOption === 'B' ? 'bg-emerald-100 text-emerald-800 font-medium border border-emerald-200' : 'bg-white border border-slate-200'}`}>B) {q.optionB}</div>
+                  <div className={`p-2 rounded text-sm ${q.correctOption === 'C' ? 'bg-emerald-100 text-emerald-800 font-medium border border-emerald-200' : 'bg-white border border-slate-200'}`}>C) {q.optionC}</div>
+                  <div className={`p-2 rounded text-sm ${q.correctOption === 'D' ? 'bg-emerald-100 text-emerald-800 font-medium border border-emerald-200' : 'bg-white border border-slate-200'}`}>D) {q.optionD}</div>
+                </div>
+                <div className="ml-10 mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800">
+                  <span className="font-bold">Explanation:</span> {q.explanation}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

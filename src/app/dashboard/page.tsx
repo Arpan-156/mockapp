@@ -1,4 +1,4 @@
-﻿import { getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -198,7 +198,7 @@ export default async function DashboardPage() {
                         ) : "- / -"}
                       </div>
                       <Link href={isSubmitted ? `/result/${attempt.id}` : `/exam/${attempt.id}`}>
-                        <Button variant={isSubmitted ? "outline" : "default"} size="sm" className={`rounded-lg font-semibold ${!isSubmitted && "bg-blue-600 hover:bg-blue-700 text-white"}`}>
+                        <Button variant={isSubmitted ? "outline" : "primary"} size="sm" className={`rounded-lg font-semibold ${!isSubmitted && "bg-blue-600 hover:bg-blue-700 text-white"}`}>
                           {isSubmitted ? "Analysis" : "Resume"}
                         </Button>
                       </Link>
